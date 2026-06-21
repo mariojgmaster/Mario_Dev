@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Joguinho da Letícia" />
+    <title>Joguinho da Letícia</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #120c19;
+        --panel: rgba(24, 16, 31, 0.92);
+        --panel-2: rgba(255, 255, 255, 0.06);
+        --text: #fff6fb;
+        --muted: #d8bfd0;
+        --accent: #ff7bb8;
+        --accent-2: #8ad8ff;
+        --accent-3: #ffe28a;
+        --shadow: rgba(0, 0, 0, 0.5);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        overflow: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(255, 123, 184, 0.2), transparent 24%),
+          radial-gradient(circle at 80% 10%, rgba(138, 216, 255, 0.18), transparent 20%),
+          radial-gradient(circle at 70% 80%, rgba(255, 226, 138, 0.12), transparent 26%),
+          linear-gradient(160deg, #1b1025, var(--bg) 70%);
+        color: var(--text);
+      }
+
+      .shell {
+        width: min(920px, 100%);
+        border-radius: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(24, 16, 31, 0.94), rgba(14, 10, 18, 0.96));
+        box-shadow: 0 32px 90px var(--shadow), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+        backdrop-filter: blur(18px);
+        padding: clamp(24px, 5vw, 44px);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.76rem;
+      }
+
+      .badge::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px rgba(255, 123, 184, 0.18);
+      }
+
+      h1, h2 {
+        margin: 16px 0 0;
+        letter-spacing: -0.06em;
+        line-height: 0.96;
+      }
+
+      h1 { font-size: clamp(2.6rem, 7vw, 5.2rem); }
+      h2 { font-size: clamp(2rem, 6vw, 4rem); }
+
+      p {
+        margin: 16px 0 0;
+        max-width: 66ch;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: clamp(1rem, 2vw, 1.12rem);
+      }
+
+      .layout {
+        display: grid;
+        gap: 22px;
+      }
+
+      .intro, .win {
+        position: relative;
+        z-index: 2;
+      }
+
+      .hud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--panel-2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+
+      .chip strong { color: #ffffff; }
+
+      .board {
+        position: relative;
+        min-height: 340px;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background:
+          radial-gradient(circle at center, rgba(255, 123, 184, 0.11), transparent 55%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
+        overflow: hidden;
+      }
+
+      .board::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 24px;
+        border: 1px dashed rgba(255, 255, 255, 0.07);
+        pointer-events: none;
+      }
+
+      .heart {
+        position: absolute;
+        width: 92px;
+        height: 92px;
+        border: none;
+        border-radius: 28px;
+        display: grid;
+        place-items: center;
+        font-size: 2.4rem;
+        color: #5a082f;
+        background: linear-gradient(145deg, #ffb3d3, #ff6ea9);
+        box-shadow:
+          0 18px 40px rgba(255, 123, 184, 0.35),
+          0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.14s ease, box-shadow 0.14s ease;
+      }
+
+      .heart:hover { transform: scale(1.04) rotate(-3deg); }
+      .heart:active { transform: scale(0.96); }
+      .heart.bounce { animation: bounce 0.25s ease; }
+
+      @keyframes bounce {
+        0% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.14) rotate(8deg); }
+        100% { transform: scale(1) rotate(0deg); }
+      }
+
+      .message {
+        min-height: 76px;
+        padding: 18px 20px;
+        border-left: 4px solid var(--accent-2);
+        border-radius: 18px;
+        background: rgba(138, 216, 255, 0.08);
+        color: #effcff;
+        line-height: 1.65;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      a, button {
+        color: inherit;
+        text-decoration: none;
+        font: inherit;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--accent), #ffb2d1);
+        border-color: transparent;
+        color: #2a0216;
+      }
+
+      .btn.ghost { color: var(--text); }
+
+      .win-card {
+        margin-top: 10px;
+        padding: 22px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .sparkles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .sparkle {
+        position: absolute;
+        font-size: 1.2rem;
+        opacity: 0;
+        animation: floatUp 2.2s ease-out forwards;
+      }
+
+      @keyframes floatUp {
+        0% { transform: translateY(20px) scale(0.4); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(-120px) scale(1.1); opacity: 0; }
+      }
+
+      .hidden { display: none !important; }
+      .muted { color: rgba(216, 191, 208, 0.78); }
+      .fine { font-size: 0.92rem; }
+      .strong { color: #ffffff; }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="layout" id="intro">
+        <div class="badge">missão romântica desbloqueada</div>
+        <h1>Joguinho da Letícia</h1>
+        <p>
+          A regra é simples: ache 5 corações. Cada clique rende um ponto e um pouco
+          mais de implicância carinhosa. No fim, tem uma mensagem final feita só pra ela.
+        </p>
+        <div class="actions">
+          <button class="btn primary" id="startBtn" type="button">Começar a caçada</button>
+          <a class="btn ghost" href="/">Voltar pra home</a>
+        </div>
+      </section>
+
+      <section class="layout hidden" id="gameSection" aria-live="polite">
+        <div class="hud">
+          <div class="chip"><strong>Objetivo:</strong> pegar 5 corações</div>
+          <div class="chip"><strong>Pontos:</strong> <span id="score">0</span>/5</div>
+        </div>
+
+        <div class="board" id="board">
+          <div class="sparkles" id="sparkles"></div>
+          <button class="heart" id="heart" type="button" aria-label="Coração da Letícia">❤</button>
+        </div>
+
+        <div class="message" id="statusMessage">
+          Clique no coração. Ele foge porque gosta de atenção, igual alguns casais.
+        </div>
+
+        <div class="fine muted">
+          Dica: no celular, toque rápido. Esse coração tem instinto de sobrevivência.
+        </div>
+      </section>
+
+      <section class="layout hidden" id="winSection">
+        <div class="badge">fase final</div>
+        <h2>Você venceu, Letícia.</h2>
+        <div class="win-card">
+          <p>
+            Veredito oficial: você é chatinha, sim. Mas é a minha chatinha favorita,
+            a pessoa que bagunça a rotina, corrige tudo, manda em metade do universo
+            e ainda assim faz o resto ficar melhor só por existir.
+          </p>
+          <p>
+            Então fica registrado: eu aceito as implicâncias, os olhares de reprovação
+            e até os sermões curtos, porque no pacote vem você. E eu gosto muito desse pacote.
+          </p>
+          <p class="strong">
+            Moral da história: eu posso até reclamar... mas é só pra disfarçar que eu te amo pra caramba.
+          </p>
+        </div>
+        <div class="actions">
+          <a class="btn primary" href="/">Voltar pra home</a>
+          <button class="btn ghost" id="againBtn" type="button">Jogar de novo</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const intro = document.getElementById('intro');
+      const gameSection = document.getElementById('gameSection');
+      const winSection = document.getElementById('winSection');
+      const startBtn = document.getElementById('startBtn');
+      const againBtn = document.getElementById('againBtn');
+      const board = document.getElementById('board');
+      const heart = document.getElementById('heart');
+      const scoreEl = document.getElementById('score');
+      const statusMessage = document.getElementById('statusMessage');
+      const sparkles = document.getElementById('sparkles');
+
+      const taunts = [
+        'Boa. Um coração caiu. Só faltam 4.',
+        'Isso, confie no seu reflexo. O coração não confia no dele.',
+        'Quase um recorde. Quase, porque eu ainda estou contando.',
+        'Você está indo bem demais. Começo a achar que subestimei a Letícia.',
+        'Último coração. A parte romântica já está pronta lá na frente.'
+      ];
+
+      const victorySparkles = ['❤', '✦', '✧', '💖', '✨'];
+      const total = 5;
+      let score = 0;
+
+      function placeHeart() {
+        const bounds = board.getBoundingClientRect();
+        const heartSize = 92;
+        const padding = 14;
+        const maxX = Math.max(padding, bounds.width - heartSize - padding);
+        const maxY = Math.max(padding, bounds.height - heartSize - padding);
+        const x = padding + Math.random() * Math.max(0, maxX - padding);
+        const y = padding + Math.random() * Math.max(0, maxY - padding);
+        heart.style.left = `${Math.min(x, bounds.width - heartSize - padding)}px`;
+        heart.style.top = `${Math.min(y, bounds.height - heartSize - padding)}px`;
+      }
+
+      function popSparkles() {
+        const bounds = board.getBoundingClientRect();
+        for (let i = 0; i < 16; i += 1) {
+          const spark = document.createElement('span');
+          spark.className = 'sparkle';
+          spark.textContent = victorySparkles[i % victorySparkles.length];
+          spark.style.left = `${Math.random() * bounds.width}px`;
+          spark.style.top = `${bounds.height - 20 + Math.random() * 22}px`;
+          spark.style.animationDelay = `${Math.random() * 0.5}s`;
+          spark.style.transform = `rotate(${Math.random() * 40 - 20}deg)`;
+          sparkles.appendChild(spark);
+          setTimeout(() => spark.remove(), 2400);
+        }
+      }
+
+      function resetGame() {
+        score = 0;
+        scoreEl.textContent = score;
+        statusMessage.textContent = 'Clique no coração. Ele foge porque gosta de atenção, igual alguns casais.';
+        intro.classList.add('hidden');
+        winSection.classList.add('hidden');
+        gameSection.classList.remove('hidden');
+        requestAnimationFrame(() => placeHeart());
+      }
+
+      startBtn.addEventListener('click', resetGame);
+      againBtn.addEventListener('click', resetGame);
+
+      heart.addEventListener('click', () => {
+        score += 1;
+        scoreEl.textContent = score;
+        heart.classList.remove('bounce');
+        void heart.offsetWidth;
+        heart.classList.add('bounce');
+
+        if (score < total) {
+          statusMessage.textContent = taunts[score - 1];
+          placeHeart();
+        } else {
+          statusMessage.textContent = 'Último coração capturado. A mensagem final está liberada.';
+          popSparkles();
+          setTimeout(() => {
+            gameSection.classList.add('hidden');
+            winSection.classList.remove('hidden');
+          }, 900);
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (!gameSection.classList.contains('hidden')) {
+          placeHeart();
+        }
+      });
+
+      placeHeart();
+    </script>
+  </body>
+</html>
